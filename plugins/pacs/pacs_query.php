@@ -63,6 +63,8 @@ $series_parameter['SeriesDescription'] = '';
 // run query
 $all_query = $pacs->queryAll($study_parameter, $series_parameter, null);
 
+print_r($all_query);
+
 // post filter
 $post_filter = Array();
 $post_filter['PerformedStationAETitle'] = is_set($_POST['PACS_PSAET']);

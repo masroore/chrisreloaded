@@ -3,184 +3,6 @@
  */
 var _PACS_ = _PACS_ || {};
 /**
- * Bind the simple search input field to the simple search button.
- */
-jQuery('#pacs_form').submit(function(e) {
-  e.preventDefault();
-  if (e.which == 13) {
-    jQuery("#SEARCH").click();
-  }
-});
-/**
- * Show/hide the advanced parameters div on click
- */
-_PACS_.connectShowAdvancedParameters = function() {
-  jQuery("#show_advanced").live(
-      'click',
-      function(event) {
-        if (jQuery("#pacs_advanced").is(':visible')) {
-          jQuery("#pacs_advanced").hide('blind', 100);
-          jQuery("#show_advanced").html(
-              '<i class="icon-chevron-down"></i><b>Advanced parameters</b>');
-        } else {
-          jQuery("#pacs_advanced").show('blind', 100);
-          jQuery("#show_advanced").html(
-              '<i class="icon-chevron-up"></i><b>Advanced parameters</b>');
-        }
-      });
-}
-/**
- * Start ajax search on click
- */
-_PACS_.connectAjaxSearch = function() {
-  jQuery("#SEARCH").live('click', function(event) {
-    _PACS_.ajaxSearch();
-  });
-}
-_PACS_.cleanResults = function() {
-  if (jQuery('#S-RESULTS').length != 0) {
-    _PACS_.table.dataTable().fnDestroy();
-    _PACS_.table = null;
-    jQuery('#S-RESULTS').remove();
-  }
-}
-_PACS_.preProcessMRN = function() {
-  var mrns = jQuery("#PACS_MRN").attr('value').split(/\s+/g);
-  var nb_mrns = mrns.length;
-  if (nb_mrns >= 2 && mrns[nb_mrns - 1] == "") {
-    nb_mrns--;
-  }
-  return [ mrns, nb_mrns ];
-}
-_PACS_.preProcessDate = function() {
-  var dates = jQuery("#PACS_DAT").attr('value').split(/\-/g);
-  var nb_dates = dates.length;
-  // list all dates to be queried
-  if (nb_dates >= 2 && dates[1] != "") {
-    var f_year = dates[0].substring(0, 4);
-    var f_month = dates[0].substring(4, 6);
-    var f_day = dates[0].substring(6, 8);
-    var from = new Date(f_year, parseInt(f_month) - 1, f_day);
-    var t_year = dates[1].substring(0, 4);
-    var t_month = dates[1].substring(4, 6);
-    var t_day = dates[1].substring(6, 8);
-    var to = new Date(t_year, parseInt(t_month) - 1, t_day);
-    dates = [];
-    dates.push(f_year + f_month + f_day);
-    from.setDate(from.getDate() + 1);
-    while (from <= to) {
-      dates.push(from.getFullYear().toString()
-          + ("0" + (from.getMonth() + 1).toString()).slice(-2)
-          + ("0" + from.getDate().toString()).slice(-2));
-      from.setDate(from.getDate() + 1);
-    }
-    nb_dates = dates.length;
-  } else {
-    nb_dates = 1;
-  }
-  return [ dates, nb_dates ];
-}
-/**
- * Setup the ajaxSearch action
- */
-_PACS_.ajaxSearch = function() {
-  _PACS_.cleanResults();
-  // clean delete cache
-  _PACS_.cachedSeries = [];
-  _PACS_.cachedRaw = [ {}, {} ];
-  // split MRNs on white space
-  var pro_mrn = _PACS_.preProcessMRN();
-  // sanity check should occur
-  var mrns = pro_mrn[0];
-  var nb_mrns = pro_mrn[1];
-  // create list of date studies
-  var pro_date = _PACS_.preProcessDate();
-  // sanity check should occur
-  var dates = pro_date[0];
-  var nb_dates = pro_date[1];
-  var nb_queries = nb_mrns * nb_dates;
-  // keep reference to current object for the ajax response
-  // modify class
-  jQuery("#SEARCH").removeClass('btn-primary').addClass('btn-warning');
-  // modify content
-  jQuery("#SEARCH").html(
-      '<i class="icon-refresh rotating_class"></i> <span> '
-          + parseInt(100 * _PACS_.ajaxStatus / nb_queries) + '%</span>');
-  var i = 0;
-  if (nb_mrns >= 2) {
-    // loop through mrns
-    for (i = 0; i < nb_mrns; i++) {
-      if (nb_dates >= 2) {
-        // loop through dates
-        var j = 0;
-        for (j = 0; j < nb_dates; j++) {
-          _PACS_.queryDayAll(mrns[i], dates[j], nb_queries);
-        }
-      } else {
-        // no dates loop
-        _PACS_.queryDayAll(mrns[i], dates[0], nb_queries);
-      }
-    }
-  } else {
-    // no mrn loop
-    if (nb_dates >= 2) {
-      // loop through dates
-      var j = 0;
-      for (j = 0; j < nb_dates; j++) {
-        _PACS_.queryDayAll(mrns[0], dates[j], nb_queries);
-      }
-    } else {
-      _PACS_.queryDayAll(mrns[0], dates[0], nb_queries);
-    }
-  }
-}
-_PACS_.queryDayAll = function(mrn, date, nb_queries) {
-  jQuery.ajax({
-    type : "POST",
-    url : "pacs_query.php",
-    dataType : "json",
-    data : {
-      USER_AET : jQuery("#USER_AET").attr('value'),
-      SERVER_IP : jQuery("#SERVER_IP").attr('value'),
-      SERVER_POR : jQuery("#SERVER_POR").attr('value'),
-      PACS_MRN : mrn,
-      PACS_NAM : jQuery("#PACS_NAM").attr('value'),
-      PACS_MOD : jQuery("#PACS_MOD").attr('value'),
-      PACS_DAT : date,
-      PACS_ACC_NUM : '',
-      PACS_STU_DES : jQuery("#PACS_STU_DES").attr('value'),
-      PACS_SER_DES : jQuery("#PACS_SER_DES").attr('value'),
-      PACS_STU_UID : '',
-      PACS_PSAET : jQuery("#PACS_PSAET").attr('value')
-    },
-    success : function(data) {
-      jQuery("#PACS-RESULTS").show('blind', 100);
-      // data simple visualization
-      _PACS_.ajaxAdvancedResults(data);
-      _PACS_.ajaxStatus++;
-      jQuery("#SEARCH").html(
-          '<i class="icon-refresh rotating_class"></i> <span> '
-              + parseInt(100 * _PACS_.ajaxStatus / nb_queries) + '%</span>');
-      if (nb_queries == _PACS_.ajaxStatus) {
-        jQuery("#SEARCH").removeClass('btn-warning').addClass('btn-primary');
-        jQuery("#SEARCH").html('Search');
-        _PACS_.ajaxStatus = 0;
-      }
-    },
-    error : function(xhr, textStatus, error) {
-      _PACS_.ajaxStatus++;
-      jQuery("#SEARCH").html(
-          '<i class="icon-refresh rotating_class"></i> <span> '
-              + parseInt(100 * _PACS_.ajaxStatus / nb_queries) + '%</span>');
-      if (nb_queries == _PACS_.ajaxStatus) {
-        jQuery("#SEARCH").removeClass('btn-warning').addClass('btn-primary');
-        jQuery("#SEARCH").html('Search');
-        _PACS_.ajaxStatus = 0;
-      }
-    }
-  });
-}
-/**
  * Create 'Advanced' table dataTables enabled.
  */
 _PACS_.advancedTable = function() {
@@ -734,6 +556,56 @@ $(document).ready(function() {
   //
   // Global variables
   //
+  var json_files = {${LIST_JSON}};
+  window.console.log(json_files);
+/*
+  _PACS_.queryDayAll = function(mrn, date, nb_queries) {
+    jQuery.ajax({
+      type : "POST",
+      url : "pacs_query.php",
+      dataType : "json",
+      data : {
+        USER_AET : jQuery("#USER_AET").attr('value'),
+        SERVER_IP : jQuery("#SERVER_IP").attr('value'),
+        SERVER_POR : jQuery("#SERVER_POR").attr('value'),
+        PACS_MRN : mrn,
+        PACS_NAM : jQuery("#PACS_NAM").attr('value'),
+        PACS_MOD : jQuery("#PACS_MOD").attr('value'),
+        PACS_DAT : date,
+        PACS_ACC_NUM : '',
+        PACS_STU_DES : jQuery("#PACS_STU_DES").attr('value'),
+        PACS_SER_DES : jQuery("#PACS_SER_DES").attr('value'),
+        PACS_STU_UID : '',
+        PACS_PSAET : jQuery("#PACS_PSAET").attr('value')
+      },
+      success : function(data) {
+        jQuery("#PACS-RESULTS").show('blind', 100);
+        // data simple visualization
+        _PACS_.ajaxAdvancedResults(data);
+        _PACS_.ajaxStatus++;
+        jQuery("#SEARCH").html(
+            '<i class="icon-refresh rotating_class"></i> <span> '
+                + parseInt(100 * _PACS_.ajaxStatus / nb_queries) + '%</span>');
+        if (nb_queries == _PACS_.ajaxStatus) {
+          jQuery("#SEARCH").removeClass('btn-warning').addClass('btn-primary');
+          jQuery("#SEARCH").html('Search');
+          _PACS_.ajaxStatus = 0;
+        }
+      },
+      error : function(xhr, textStatus, error) {
+        _PACS_.ajaxStatus++;
+        jQuery("#SEARCH").html(
+            '<i class="icon-refresh rotating_class"></i> <span> '
+                + parseInt(100 * _PACS_.ajaxStatus / nb_queries) + '%</span>');
+        if (nb_queries == _PACS_.ajaxStatus) {
+          jQuery("#SEARCH").removeClass('btn-warning').addClass('btn-primary');
+          jQuery("#SEARCH").html('Search');
+          _PACS_.ajaxStatus = 0;
+        }
+      }
+    });
+  }
+  */
   // is study checked?
   _PACS_.studyStatus = {};
   // keep track of the job status
