@@ -118,8 +118,6 @@ $series_parameter['SeriesDescription'] = '';
 // run query
 $all_query = $pacs->queryAll($study_parameter, $series_parameter, null);
 
-print_r($all_query);
-
 // post filter
 $post_filter = Array();
 if($station != ''){
@@ -144,7 +142,7 @@ if($date == ''){
 }
 
 $filename = $name."-".$date.".json";
-$myFile = $output.$name.$filename;
+$myFile = $output.$filename;
 $fh = fopen($myFile, 'w') or die("can't open file");
 fwrite($fh, $json);
 fclose($fh);

@@ -158,11 +158,11 @@ class PACS(Plugin):
       else :
             os.system(self.finishCommand(command, "".join(list_mrn), "".join(list_date)))
             list_json += self.format("".join(list_mrn), "".join(list_date))
-    list_json = "\"" + list_json.strip().replace(" ", ",") + "\"";
+    list_json = list_json.strip().replace(" ", ",")
     print list_json
+    print current_dir + "/format.php  -o " + options.output + " -l " + list_json
     # use php templates to replace it in js code "on_ready"
-    #print os.system(current_dir + "/format.php  -l " + options.output)
-    # copy index.html over
+    print os.system(current_dir + "/format.php  -o " + options.output + " -l " + list_json)
         
 # ENTRYPOINT
 if __name__ == "__main__":

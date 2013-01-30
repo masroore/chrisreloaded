@@ -33,7 +33,7 @@ require_once (joinPaths(CHRIS_CONTROLLER_FOLDER, 'template.class.php'));
 require_once (joinPaths(CHRIS_MODEL_FOLDER, 'user.model.php'));
 
 // define the options
-$shortopts = "l:";
+$shortopts = "l:o:";
 
 $options = getopt($shortopts);
 
@@ -42,7 +42,27 @@ if(isset($options['l'])){
   $list = $options['l'];
 }
 
-$t = new Template('js/pacs.js');
+$output = "";
+if(isset($options['o'])){
+  $output = $options['o'];
+}
+// cp some files over
+recurse_copy('css',$output.'css');
+recurse_copy('js',$output.'js');
+recurse_copy('gfx',$output.'gfx');
+
+// update pacs.js to define json object to be loaded
+$t = new Template($output.'js/pacs.js');
 $t -> replace('LIST_JSON', $list);
-echo $t;
+
+$fh = fopen($output.'js/pacs.js', 'w') or die("can't open file");
+fwrite($fh, $t);
+fclose($fh);
+
+$index = shell_exec('./index.php');
+$fh = fopen($output.'index.html', 'w') or die("can't open file");
+fwrite($fh, $index);
+fclose($fh);
+
+// generate index.html
 ?>

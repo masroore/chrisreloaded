@@ -1,3 +1,4 @@
+#!/usr/bin/php
 <?php
 /**
  *
@@ -32,18 +33,8 @@ define('__CHRIS_ENTRY_POINT__', 666);
 // include the configuration
 require_once ('../../config.inc.php');
 
-// include the template class
-require_once (joinPaths(CHRIS_CONTROLLER_FOLDER, 'security.controller.php'));
 require_once (joinPaths(CHRIS_CONTROLLER_FOLDER, 'template.class.php'));
 require_once (joinPaths(CHRIS_MODEL_FOLDER, 'user.model.php'));
-
-// validate the credentials
-if (!SecurityC::login()) {
-  // invalid credentials
-  // destroy the session
-  session_destroy();
-  die("Access denied.");
-}
 
 // create the pacs query page
 function queryPage() {
