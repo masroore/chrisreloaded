@@ -564,7 +564,7 @@ $(document).ready(function() {
   _PACS_.cachedSeries = {};
   // cache all incoming raw data
   // used in advanced and simple view
-  _PACS_.cachedRaw = null;
+  _PACS_.cachedRaw = [[], []];
   // table containing raw data
   _PACS_.table = null;
   // keep track of opened studies in simple view
@@ -577,17 +577,20 @@ $(document).ready(function() {
   _PACS_.connectPull();
   
   var json_files = [${LIST_JSON}];
-  window.console.log(json_files);
-  
-  //url: 'api.php?action=get&what=file&parameters='+filename,
+
   for(json in json_files){
-    jQuery.ajax({
-      type : "POST",
-      url : "api.php?action=get&what=file&parameters="+json,
-      dataType : "json",
-      success : function(data) {
-        _PACS_.ajaxAdvancedResults(data);
-      }
-    });
-  }
+    window.console.log(json_files[json]);
+      jQuery.ajax({
+        type : "POST",
+        url : "http://chris/n/api.php?action=get&what=rawfile&parameters="+json_files[json],
+        dataType: "jsonp",success : function(data) {
+          _PACS_.ajaxAdvancedResults(data);
+        },
+        error : function(jqXHR, textStatus, errorThrown ) {
+          window.console.log(jqXHR);
+          window.console.log(textStatus);
+          window.console.log(errorThrown);
+        }
+      });
+    }
 });

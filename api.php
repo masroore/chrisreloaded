@@ -200,8 +200,15 @@ if (!SecurityC::login()) {
 
           die();
 
-        } else if($what == 'users') {
+        }
+        else if ($what == 'rawfile') {
+          $name = joinPaths(CHRIS_USERS, $parameters);
+          
+          echo $_GET['callback']."(".file_get_contents($name).");";
+          die();
 
+        }
+        else if($what == 'users') {
           $result['result'] = UserC::get();
 
         }
