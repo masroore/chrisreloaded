@@ -556,61 +556,8 @@ $(document).ready(function() {
   //
   // Global variables
   //
-  var json_files = {${LIST_JSON}};
-  window.console.log(json_files);
-/*
-  _PACS_.queryDayAll = function(mrn, date, nb_queries) {
-    jQuery.ajax({
-      type : "POST",
-      url : "pacs_query.php",
-      dataType : "json",
-      data : {
-        USER_AET : jQuery("#USER_AET").attr('value'),
-        SERVER_IP : jQuery("#SERVER_IP").attr('value'),
-        SERVER_POR : jQuery("#SERVER_POR").attr('value'),
-        PACS_MRN : mrn,
-        PACS_NAM : jQuery("#PACS_NAM").attr('value'),
-        PACS_MOD : jQuery("#PACS_MOD").attr('value'),
-        PACS_DAT : date,
-        PACS_ACC_NUM : '',
-        PACS_STU_DES : jQuery("#PACS_STU_DES").attr('value'),
-        PACS_SER_DES : jQuery("#PACS_SER_DES").attr('value'),
-        PACS_STU_UID : '',
-        PACS_PSAET : jQuery("#PACS_PSAET").attr('value')
-      },
-      success : function(data) {
-        jQuery("#PACS-RESULTS").show('blind', 100);
-        // data simple visualization
-        _PACS_.ajaxAdvancedResults(data);
-        _PACS_.ajaxStatus++;
-        jQuery("#SEARCH").html(
-            '<i class="icon-refresh rotating_class"></i> <span> '
-                + parseInt(100 * _PACS_.ajaxStatus / nb_queries) + '%</span>');
-        if (nb_queries == _PACS_.ajaxStatus) {
-          jQuery("#SEARCH").removeClass('btn-warning').addClass('btn-primary');
-          jQuery("#SEARCH").html('Search');
-          _PACS_.ajaxStatus = 0;
-        }
-      },
-      error : function(xhr, textStatus, error) {
-        _PACS_.ajaxStatus++;
-        jQuery("#SEARCH").html(
-            '<i class="icon-refresh rotating_class"></i> <span> '
-                + parseInt(100 * _PACS_.ajaxStatus / nb_queries) + '%</span>');
-        if (nb_queries == _PACS_.ajaxStatus) {
-          jQuery("#SEARCH").removeClass('btn-warning').addClass('btn-primary');
-          jQuery("#SEARCH").html('Search');
-          _PACS_.ajaxStatus = 0;
-        }
-      }
-    });
-  }
-  */
   // is study checked?
   _PACS_.studyStatus = {};
-  // keep track of the job status
-  // how many ajax queries have succeed
-  _PACS_.ajaxStatus = 0;
   // order received series
   // keep track of status
   // used in the details view
@@ -622,16 +569,25 @@ $(document).ready(function() {
   _PACS_.table = null;
   // keep track of opened studies in simple view
   _PACS_.openStudies = [];
-  // connect button
-  // show/hide the advanced parameters on click
-  _PACS_.connectShowAdvancedParameters();
-  // connect button for
-  // query server through ajax for given set of parameters
-  _PACS_.connectAjaxSearch();
   _PACS_.studyView();
   _PACS_.seriesView();
   _PACS_.setupDetailStudy();
   _PACS_.setupDownloadStudy();
   _PACS_.setupDownloadSeries();
   _PACS_.connectPull();
+  
+  var json_files = [${LIST_JSON}];
+  window.console.log(json_files);
+  
+  //url: 'api.php?action=get&what=file&parameters='+filename,
+  for(json in json_files){
+    jQuery.ajax({
+      type : "POST",
+      url : "api.php?action=get&what=file&parameters="+json,
+      dataType : "json",
+      success : function(data) {
+        _PACS_.ajaxAdvancedResults(data);
+      }
+    });
+  }
 });

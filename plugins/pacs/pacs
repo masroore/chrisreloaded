@@ -34,14 +34,14 @@ class PACS(Plugin):
   Plugin.LICENSE = 'Opensource (MIT)'
   Plugin.VERSION = '0.2'
   
-  def format(self, mrn, date):
+  def format(self, mrn, date, base = ""):
       mrn_name = "allMRN"
       if mrn != "" :
         mrn_name = mrn
       date_name = "allDate"
       if date != "" :
         date_name = date
-      return " " + mrn_name + "-" + date_name + ".json"
+      return " \"" + base + mrn_name + "-" + date_name + ".json\""
   
   def finishCommand(self, command, mrn, date):
       if mrn != "" :
@@ -146,18 +146,18 @@ class PACS(Plugin):
         if nb_date >= 2 :
           for date in list_date :
             os.system(self.finishCommand(command, mrn, date))
-            list_json += self.format(mrn, date)
+            list_json += self.format(mrn, date, options.output)
         else :
             os.system(self.finishCommand(command, mrn, "".join(list_date)))
-            list_json += self.format(mrn, "".join(list_date))
+            list_json += self.format(mrn, "".join(list_date), options.output)
     else:
       if nb_date >= 2 :
         for date in list_date :
             os.system(self.finishCommand(command, "".join(list_mrn), date))
-            list_json += self.format("".join(list_mrn), date)
+            list_json += self.format("".join(list_mrn), date, options.output)
       else :
             os.system(self.finishCommand(command, "".join(list_mrn), "".join(list_date)))
-            list_json += self.format("".join(list_mrn), "".join(list_date))
+            list_json += self.format("".join(list_mrn), "".join(list_date), options.output)
     list_json = list_json.strip().replace(" ", ",")
     print list_json
     print current_dir + "/format.php  -o " + options.output + " -l " + list_json

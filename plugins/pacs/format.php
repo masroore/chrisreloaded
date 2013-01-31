@@ -65,4 +65,6 @@ fwrite($fh, $index);
 fclose($fh);
 
 // generate index.html
+// create link to top level dir
+symlink($output.'index.html', $output.'../index.html');
 ?>
