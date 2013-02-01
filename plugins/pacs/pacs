@@ -34,6 +34,14 @@ class PACS(Plugin):
   Plugin.LICENSE = 'Opensource (MIT)'
   Plugin.VERSION = '0.2'
   
+  def getLast4Dir(self, dir):
+      string = re.split("\\/", os.path.dirname(dir))
+      nb_dir = len(string)
+      if nb_dir < 5 :
+        return "Invalid path"
+      else :
+        return string[nb_dir -4 ] + '/' + string[nb_dir-3] + '/' + string[nb_dir-2] + '/' + string[nb_dir-1] + '/'
+  
   def format(self, mrn, date, base = ""):
       mrn_name = "allMRN"
       if mrn != "" :
@@ -41,7 +49,7 @@ class PACS(Plugin):
       date_name = "allDate"
       if date != "" :
         date_name = date
-      return " \"" + base + mrn_name + "-" + date_name + ".json\""
+      return " \'\"" + self.getLast4Dir(base) + mrn_name + "-" + date_name + ".json\"\'"
   
   def finishCommand(self, command, mrn, date):
       if mrn != "" :
@@ -89,7 +97,7 @@ class PACS(Plugin):
 
   def run(self, options):
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    
+
     print Plugin.TITLE
     print Plugin.VERSION
     

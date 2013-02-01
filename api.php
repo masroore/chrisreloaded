@@ -204,9 +204,25 @@ if (!SecurityC::login()) {
         else if ($what == 'rawfile') {
           $name = joinPaths(CHRIS_USERS, $parameters);
           
-          echo $_GET['callback']."(".file_get_contents($name).");";
+          echo $_GET['jsonp_callback']."(".file_get_contents($name).");";
           die();
 
+        }
+        else if ($what == 'onemore') {
+          // here we don't create JSON but just pass thru the file content
+          $name = joinPaths(CHRIS_USERS, $parameters);
+
+          // if the file does not exist, just die
+          if (!is_file($name)) {
+            die();
+          }
+
+          $fp = fopen($name, 'rb');
+
+          fpassthru($fp);
+
+          die();
+        
         }
         else if($what == 'users') {
           $result['result'] = UserC::get();
