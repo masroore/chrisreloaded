@@ -49,7 +49,7 @@ class PACS(Plugin):
       date_name = "allDate"
       if date != "" :
         date_name = date
-      return " \'\"" + self.getLast4Dir(base) + mrn_name + "-" + date_name + ".json\"\'"
+      return " \'" + self.getLast4Dir(base) + mrn_name + "-" + date_name + ".json\'"
   
   def finishCommand(self, command, mrn, date):
       if mrn != "" :

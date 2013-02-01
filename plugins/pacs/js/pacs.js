@@ -576,7 +576,17 @@ $(document).ready(function() {
   _PACS_.setupDownloadSeries();
   _PACS_.connectPull();
   
-  var json_files = [${LIST_JSON}];
+  // get list of json files and replace them!
+  test = jQuery("#LIST_JSON").html();
+  var split_test = test.split(',');
+  window.console.log(test);
+  var json_files = [];
+  
+  for ( var index in split_test) {
+    json_files.push(split_test[index]);
+  }
+  
+  window.console.log(json_files);
 
   for(json in json_files){
     window.console.log(json_files[json]);

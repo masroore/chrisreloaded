@@ -51,17 +51,15 @@ recurse_copy('css',$output.'css');
 recurse_copy('js',$output.'js');
 recurse_copy('gfx',$output.'gfx');
 
-// update pacs.js to define json object to be loaded
-$t = new Template($output.'js/pacs.js');
+$t = new Template('template/pacs.html');
+$t -> replace('CSS_CHRIS', 'css.chris.html', 'template');
+$t -> replace('CSS_PACS', 'css.pacs.html', 'template');
+$t -> replace('JS_CHRIS', 'js.chris.html', 'template');
+$t -> replace('JS_PACS', 'js.pacs.html', 'template');
+$t -> replace('RESULTS', 'results.html', 'template');
 $t -> replace('LIST_JSON', $list);
-
-$fh = fopen($output.'js/pacs.js', 'w') or die("can't open file");
-fwrite($fh, $t);
-fclose($fh);
-
-$index = shell_exec('./index.php');
 $fh = fopen($output.'index.html', 'w') or die("can't open file");
-fwrite($fh, $index);
+fwrite($fh, $t);
 fclose($fh);
 
 // generate index.html
