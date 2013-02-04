@@ -107,12 +107,9 @@ class Template {
    */
   public function replace($tag, $content, $templateDir = CHRIS_TEMPLATE_FOLDER) {
 
-    // check if the content is file
-    // do not read png files
     if (is_file(joinPaths($templateDir,$content))) {
-        $content = $this->parse(joinPaths($templateDir,$content));
+      $content = $this->parse(joinPaths($templateDir,$content));
     }
-
     // here the $content is for sure a string
     // so we can replace teh ${tag} with the $content
     $this->content = str_replace('${'.$tag.'}', $content, $this->content);

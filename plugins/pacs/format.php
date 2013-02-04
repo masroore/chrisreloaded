@@ -26,6 +26,8 @@
  *                        dev@babyMRI.org
  *
  */
+
+// we define a valid entry point
 define('__CHRIS_ENTRY_POINT__', 666);
 
 require_once (dirname(dirname(dirname(__FILE__))).'/config.inc.php');

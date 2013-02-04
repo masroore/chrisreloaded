@@ -46,14 +46,14 @@ class tractography(Plugin):
     # grab the first dicom input file
     # dicom directory
     command += ' -D ' + options.dti
-    # get first dicom file
-    files = [d for d in os.listdir(options.dti) if not os.path.isdir(d) and os.path.splitext(d)[1] == '.dcm']
-    if len(files) > 0:
-      command += ' -d ' + files[0]
-    else:
+    # get dti images
+    dti_files = [d for d in os.listdir(options.dti) if not os.path.isdir(d) and os.path.splitext(d)[1] == ".dcm"]
+    # check incoming dti directory
+    if not len(dti_files) > 0:
       print options.dti + ' doesn\'t contain any *.dcm files' 
       sys.exit(0)
-    
+
+    command += ' -d ' + dti_files[0]
     # stages
     command += ' -t 12';
     
@@ -106,6 +106,8 @@ class tractography(Plugin):
 # ENTRYPOINT
 if __name__ == "__main__":
   plugin = tractography()
+  # minimum required memory to start the plugin
+  plugin.memory = 2048
   #inputs
   plugin.add_parameter('Input', Plugin.IMAGE, '--dti', action='store', dest='dti', help='the dti scan')
   
@@ -134,5 +136,5 @@ if __name__ == "__main__":
   plugin.add_parameter('Gradient (Advanced)', Plugin.BOOLEAN, '--invertx', default=False, action='store_true', dest='invertx', help='Invert X gradient')
   plugin.add_parameter('Gradient (Advanced)', Plugin.BOOLEAN, '--inverty', default=False, action='store_true', dest='inverty', help='Invert Y gradient')
   plugin.add_parameter('Gradient (Advanced)', Plugin.BOOLEAN, '--invertz', default=False, action='store_true', dest='invertz', help='Invert Z gradient')
-  
+    
   plugin.launch(sys.argv)
