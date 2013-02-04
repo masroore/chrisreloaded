@@ -48,10 +48,6 @@ $output = "";
 if(isset($options['o'])){
   $output = $options['o'];
 }
-// cp some files over
-recurse_copy('css',$output.'css');
-recurse_copy('js',$output.'js');
-recurse_copy('gfx',$output.'gfx');
 
 $t = new Template('template/pacs.html');
 $t -> replace('CSS_CHRIS', 'css.chris.html', 'template');
