@@ -208,6 +208,7 @@ if ($action != 'ping' && $action != 'help' && $what == 'dont_know') {
       
         // enable cross origin requests
         header("Access-Control-Allow-Origin: *");
+        header("Content-type: text/css", true);
       
         // if the file does not exist, just die
         if (!is_file($name)) {
@@ -255,6 +256,7 @@ if ($action != 'ping' && $action != 'help' && $what == 'dont_know') {
         $name = joinPaths(CHRIS_PLUGINS_FOLDER, $parameters);
       
         // enable cross origin requests
+        header("Content-type: text/css", true);
         header("Access-Control-Allow-Origin: *");
       
         // if the file does not exist, just die

@@ -8,7 +8,7 @@ width: 100%;
 }
 
 table.dataTable thead th {
-padding: 3px 18px 3px 10px;
+padding: 0px;
 border-bottom: 1px solid black;
 font-weight: bold;
 cursor: pointer;
@@ -16,17 +16,17 @@ cursor: pointer;
 }
 
 table.dataTable tfoot th {
-padding: 3px 18px 3px 10px;
+padding: 0px;
 border-top: 1px solid black;
 font-weight: bold;
 }
 
 table.dataTable td {
-padding: 3px 10px;
+padding: 0px;
 }
 
 table.dataTable td.details {
-  padding: 0px 0px;
+  padding: 0px;
 }
 
 div.innerDetails { display: none }
