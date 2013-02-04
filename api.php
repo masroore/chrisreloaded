@@ -178,108 +178,43 @@ if (!SecurityC::login()) {
         } else if($what == 'feed_search'){
           $result['result'] = FeedC::searchClient($_SESSION['userid'], $parameters[0]);
         } else if($what == 'file') {
+          if(count($parameters) == 2){
+            // parameter 0: BASE directory
+            switch ($parameters[0]){
+              case "css":
+                $name = joinPaths(CHRIS_VIEW_FOLDER, 'css', $parameters[1]);
+                echo $name.PHP_EOL;
+                header("Content-type: text/css", true);
+                break;
+              case "js":
+                $name = joinPaths(CHRIS_VIEW_FOLDER, 'js', $parameters[1]);
+                break;
+              case "cssP":
+                $name = joinPaths(CHRIS_PLUGINS_FOLDER, $parameters[1]);
+                header("Content-type: text/css", true);
+                break;
+              case "jsP":
+                $name = joinPaths(CHRIS_PLUGINS_FOLDER, $parameters[1]);
+                break;
+              default:
+                $name = joinPaths(CHRIS_USERS, $parameters[1]);
+                break;
+            }
+            // enable cross origin requests
+            header("Access-Control-Allow-Origin: *");
 
-          // here we don't create JSON but just pass thru the file content
-          $name = joinPaths(CHRIS_USERS, $parameters);
+            // if the file does not exist, just die
+            if (!is_file($name)) {
+              die();
+            }
 
-          // enable cross origin requests
-          header("Access-Control-Allow-Origin: *");
+            $fp = fopen($name, 'rb');
 
-          // if the file does not exist, just die
-          if (!is_file($name)) {
-            die();
+            fpassthru($fp);
           }
-
-          $fp = fopen($name, 'rb');
-
-          fpassthru($fp);
-
           die();
-
         }
-        else if($what == 'css') {
-
-          // here we don't create JSON but just pass thru the file content
-          $name = joinPaths(CHRIS_VIEW_FOLDER, "css" , $parameters);
-
-          // enable cross origin requests
-          header("Access-Control-Allow-Origin: *");
-          header("Content-type: text/css", true);
-
-          // if the file does not exist, just die
-          if (!is_file($name)) {
-            die();
-          }
-
-          $fp = fopen($name, 'rb');
-
-          fpassthru($fp);
-
-          die();
-
-        }
-        else if($what == 'js') {
-
-          // here we don't create JSON but just pass thru the file content
-          $name = joinPaths(CHRIS_VIEW_FOLDER, "js" , $parameters);
-
-          // enable cross origin requests
-          header("Access-Control-Allow-Origin: *");
-
-          // if the file does not exist, just die
-          if (!is_file($name)) {
-            die();
-          }
-
-          $fp = fopen($name, 'rb');
-
-          fpassthru($fp);
-
-          die();
-
-        }
-        else if($what == 'cssPlugins') {
-
-          // here we don't create JSON but just pass thru the file content
-          $name = joinPaths(CHRIS_PLUGINS_FOLDER, $parameters);
-
-          // enable cross origin requests
-          header("Content-type: text/css", true);
-          header("Access-Control-Allow-Origin: *");
-
-          // if the file does not exist, just die
-          if (!is_file($name)) {
-            die();
-          }
-
-          $fp = fopen($name, 'rb');
-
-          fpassthru($fp);
-
-          die();
-
-        }
-        else if($what == 'jsPlugins') {
-
-          // here we don't create JSON but just pass thru the file content
-          $name = joinPaths(CHRIS_PLUGINS_FOLDER,$parameters);
-
-          // enable cross origin requests
-          header("Access-Control-Allow-Origin: *");
-
-          // if the file does not exist, just die
-          if (!is_file($name)) {
-            die();
-          }
-
-          $fp = fopen($name, 'rb');
-
-          fpassthru($fp);
-
-          die();
-
-        }
-        else if ($what == 'rawfile') {
+        else if ($what == 'json') {
           $name = joinPaths(CHRIS_USERS, $parameters);
 
           echo $_GET['jsonp_callback']."(".file_get_contents($name).");";

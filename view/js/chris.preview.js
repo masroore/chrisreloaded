@@ -84,10 +84,8 @@ _PREVIEW_.preview = function() {
     jQuery("#TL_OVER").hide();
     topiframe = '<iframe style="width: 100%; height: 700px; border: none" src="';
     endiframe = '"></iframe>';
-    window.console.log('api.php?action=get&what=file&parameters='
-        + _PREVIEW_.filepath);
     jQuery('#PREVIEW').html(
-        topiframe + 'api.php?action=get&what=file&parameters='
+        topiframe + 'api.php?action=get&what=file&parameters[]=default&parameters[]='
             + _PREVIEW_.filepath + endiframe);
   } else {
     jQuery("#TL_OVER").html('Creating visualization...');

@@ -585,13 +585,12 @@ $(document).ready(function() {
   }
   
   window.console.log(json_files);
-
   for(json in json_files){
     window.console.log(json_files[json]);
       jQuery.ajax({
         type : "POST",
         jsonp: "jsonp_callback",
-        url : "http://chris/n/api.php?action=get&what=rawfile&parameters="+json_files[json],
+        url : "http://chris/n/api.php?action=get&what=json&parameters="+json_files[json],
         dataType: "jsonp",success : function(data) {
           _PACS_.ajaxAdvancedResults(data);
         },
