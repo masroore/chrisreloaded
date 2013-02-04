@@ -78,22 +78,18 @@ _PREVIEW_.preview = function() {
                 jQuery("#textPreview")[0].scrollHeight);
           });
     }, 500);
-  }
-  else if(_PREVIEW_.renderertype == 'html'){
+  } else if (_PREVIEW_.renderertype == 'html') {
     // text/log preview
     // hide loading overlay
     jQuery("#TL_OVER").hide();
-    // grab the text file
-    jQuery.ajax({
-      url : 'api.php?action=get&what=file&parameters=' + _PREVIEW_.filepath,
-      dataType : "text"
-    }).done(function(data) {
-      
-      
-      jQuery('#PREVIEW').html(data);
-    });
-  }
-    else {
+    topiframe = '<iframe style="width: 100%; height: 700px; border: none" src="';
+    endiframe = '"></iframe>';
+    window.console.log('api.php?action=get&what=file&parameters='
+        + _PREVIEW_.filepath);
+    jQuery('#PREVIEW').html(
+        topiframe + 'api.php?action=get&what=file&parameters='
+            + _PREVIEW_.filepath + endiframe);
+  } else {
     jQuery("#TL_OVER").html('Creating visualization...');
     // set XTK renderer
     _PREVIEW_.object = eval('new X.' + _PREVIEW_.filetype + '()');

@@ -153,7 +153,7 @@ class FeedV implements ObjectViewInterface {
     // set html viewer if "index.html" exists in username/plugin/feed-id/
     if(is_file(joinPaths(CHRIS_USERS, $username,$object->plugin, $object->name.'-'.$object->id, 'index.html' ))){
       $t -> replace('FEED_HTML', 'feed_html.html');
-      $t -> replace('HTML_VIEWER', 'Click here to open Widget!');
+      //$t -> replace('HTML_VIEWER', 'Click here to open Widget!');
     } else{
       $t -> replace('FEED_HTML', '');
     }

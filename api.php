@@ -192,15 +192,101 @@ if (!SecurityC::login()) {
 
           $fp = fopen($name, 'rb');
 
-          header("Content-Length: " . filesize($name));
-          header("Content-Type: application/octet-stream");
-          header("Content-Disposition: attachment; filename=\"".basename($name)."\"");
+          fpassthru($fp);
+
+          die();
+
+        }
+        else if($what == 'css') {
+
+          // here we don't create JSON but just pass thru the file content
+          $name = joinPaths(CHRIS_VIEW_FOLDER, "css" , $parameters);
+
+          // enable cross origin requests
+          header("Access-Control-Allow-Origin: *");
+          header("Content-type: text/css", true);
+
+          // if the file does not exist, just die
+          if (!is_file($name)) {
+            die();
+          }
+
+          $fp = fopen($name, 'rb');
 
           fpassthru($fp);
 
           die();
 
-        } else if($what == 'users') {
+        }
+        else if($what == 'js') {
+
+          // here we don't create JSON but just pass thru the file content
+          $name = joinPaths(CHRIS_VIEW_FOLDER, "js" , $parameters);
+
+          // enable cross origin requests
+          header("Access-Control-Allow-Origin: *");
+
+          // if the file does not exist, just die
+          if (!is_file($name)) {
+            die();
+          }
+
+          $fp = fopen($name, 'rb');
+
+          fpassthru($fp);
+
+          die();
+
+        }
+        else if($what == 'cssPlugins') {
+
+          // here we don't create JSON but just pass thru the file content
+          $name = joinPaths(CHRIS_PLUGINS_FOLDER, $parameters);
+
+          // enable cross origin requests
+          header("Content-type: text/css", true);
+          header("Access-Control-Allow-Origin: *");
+
+          // if the file does not exist, just die
+          if (!is_file($name)) {
+            die();
+          }
+
+          $fp = fopen($name, 'rb');
+
+          fpassthru($fp);
+
+          die();
+
+        }
+        else if($what == 'jsPlugins') {
+
+          // here we don't create JSON but just pass thru the file content
+          $name = joinPaths(CHRIS_PLUGINS_FOLDER,$parameters);
+
+          // enable cross origin requests
+          header("Access-Control-Allow-Origin: *");
+
+          // if the file does not exist, just die
+          if (!is_file($name)) {
+            die();
+          }
+
+          $fp = fopen($name, 'rb');
+
+          fpassthru($fp);
+
+          die();
+
+        }
+        else if ($what == 'rawfile') {
+          $name = joinPaths(CHRIS_USERS, $parameters);
+
+          echo $_GET['jsonp_callback']."(".file_get_contents($name).");";
+          die();
+
+        }
+        else if($what == 'users') {
 
           $result['result'] = UserC::get();
 
