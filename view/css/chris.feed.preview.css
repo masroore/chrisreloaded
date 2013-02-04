@@ -39,6 +39,10 @@
 	width: 900px;
 }
 
+.xLargePreview {
+  width: 1200px;
+}
+
 #textPreview {
 	background-color: black;
 	color: white;

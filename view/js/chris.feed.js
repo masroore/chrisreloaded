@@ -43,6 +43,9 @@ _FEED_.preview = function(file) {
   case 'PARAM':
     _PREVIEW_.start('text', null, file);
     break;
+  case 'HTML':
+    _PREVIEW_.start('html', null, file);
+    break;
   }
 }
 _FEED_.onclick = function(details, more) {

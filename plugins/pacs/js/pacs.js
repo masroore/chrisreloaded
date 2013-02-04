@@ -6,7 +6,7 @@ var _PACS_ = _PACS_ || {};
  * Create 'Advanced' table dataTables enabled.
  */
 _PACS_.advancedTable = function() {
-  var content = '<table cellpadding="0" cellspacing="0" border="1" class="table" id="S-RESULTS">';
+  var content = '<table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="S-RESULTS">';
   var i = 0;
   content += '<thead><tr><th>Name</th><th>MRN</th><th>DOB</th><th>Study Date</th><th>Mod.</th><th>Study Desc.</th><th>Series Desc.</th><th>Location</th><th>files</th><th></th></tr></thead><tbody>';
   content += '</tbody></table>';
@@ -319,7 +319,7 @@ _PACS_.ajaxSimpleResults = function(data, force) {
  * Create 'Simple' table dataTables enabled.
  */
 _PACS_.simpleTable = function() {
-  var content = '<table cellpadding="0" cellspacing="0" border="1" class="table" id="S-RESULTS">';
+  var content = '<table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="S-RESULTS">';
   content += '<thead><tr><th>Name</th><th>MRN</th><th>DOB</th><th>Study Desc.</th><th>Study Date</th><th>Mod.</th><th>Location</th><th></th></tr></thead><tbody>';
   content += '</tbody></table>';
   jQuery('#SC-RESULTS').html(content);
@@ -422,7 +422,7 @@ _PACS_.seriesFormat = function(data) {
   var i = 0;
   // Create the "details" (i.e. series) html content
   // innerDetails used for slide in/out
-  var content = '<div class="innerDetails"><table class="table" cellmarging="0" cellpadding="0" cellspacing="0" border="1"><thead><tr><th>Series Desc.</th><th class="span2"># files</th><th class="span1"></th></tr></thead><tbody>';
+  var content = '<div class="innerDetails"><table class="table table-bordered" cellmarging="0" cellpadding="0" cellspacing="0" border="0"><thead><tr><th>Series Desc.</th><th class="span2"># files</th><th class="span1"></th></tr></thead><tbody>';
   for (i = 0; i < nb_results; ++i) {
     // replace '.' by '_' (. is invalid for the id)
     var stuid = data.StudyInstanceUID[i].replace(/\./g, "_");
