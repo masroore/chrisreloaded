@@ -410,7 +410,9 @@ jQuery(document)
                     }
                   });
                 } else {
-                  //open an iframe
+                  // #1- dropdown modal
+                  // #2- create iFrame
+                  // #3- pass args
                   window.console.log(_target);
                 }
               });
