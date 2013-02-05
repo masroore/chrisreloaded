@@ -59,6 +59,9 @@ class Plugin( argparse.ArgumentParser ):
     
     # the initial memory
     self.memory = 512
+    
+    # the initial memory
+    self.target = ""
 
   def error( self, message ):
     '''
@@ -83,7 +86,9 @@ class Plugin( argparse.ArgumentParser ):
     if self.status > 0:
       executable_parameters += ' status="' + str( self.status ) + '"'
     if self.memory > 0:
-      executable_parameters+= ' memory="' + str( self.memory ) + '"'
+      executable_parameters += ' memory="' + str( self.memory ) + '"'
+    if self.target != "":
+      executable_parameters += ' target="' + str( self.target ) + '"'
       
     xml += '<executable ' + executable_parameters + '>\n'
     xml += '<category>' + Plugin.CATEGORY + '</category>\n'
