@@ -723,7 +723,12 @@ _PACS_.ajaxPull = function() {
       FEED_OUTPUT : output
     },
     success : function(data) {
-      window.console.log('Youhou');
+      //close modal
+      window.parent.jQuery().toastmessage('showSuccessToast', '<h5>Job started.</h5>'
+          + 'Plugin: <b>' + plugin + '</b><br>' + 'Name: <b>'
+          + _feed_name + '</b>');
+      // close modal
+      //
     }
   });
 }
