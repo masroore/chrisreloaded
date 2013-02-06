@@ -56,8 +56,8 @@ _PREVIEW_.preview = function() {
       dataType : "text"
     }).done(
         function(data) {
-          $(_PREVIEW_.target).find('#TEXT_PREVIEW').append(
-              '<pre id="textPreview">' + data + '</pre>');
+          $(_PREVIEW_.target).find('#TEXT_PREVIEW').find('#textPreview').append(
+          data);
         });
     // refresh the log every 500 ms
     _PREVIEW_.refresher = setInterval(function() {

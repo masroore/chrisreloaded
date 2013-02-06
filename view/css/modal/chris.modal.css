@@ -1,0 +1,17 @@
+.previewRenderer {
+	position: relative;
+	background-color: #000;
+	top: 0%;
+	height: 451px;
+	width: 100%;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: -6px;
+}
+
+#TL_OVER {
+	background-color: #000;
+	position: absolute;
+	color: white;
+	margin: auto;
+}

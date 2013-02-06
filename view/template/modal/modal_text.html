@@ -1,6 +1,6 @@
-<div id="MODAL_TEXT" class="modal hide fade largePreview" tabindex="-1" role="dialog"
- aria-labelledby="PREVIEWLABEL" aria-hidden="true"
- style='height: 500px; overflow: hidden'>
+<div id="MODAL_TEXT" class="modal hide fade largePreview" tabindex="-1"
+ role="dialog" aria-labelledby="PREVIEWLABEL" aria-hidden="true"
+ style='height: 500px; width: 900px; overflow: hidden'>
  <div class="modal-header">
   <button id='modal-dismiss' type="button" class="close"
    data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -14,8 +14,9 @@
  </div>
  <div class="modal-body"
   style='padding: 0px; overflow-y: hidden; max-height: 100%;'>
-  <div id='TEXT_PREVIEW' class="previewRenderer"
+  <div id='TEXT_PREVIEW' class="previewRenderer textPreview"
    style='height: 451px; width: 100%;'>
+   <pre id='textPreview'> </pre>
    <div id='TL_OVER'>
     Retrieving data <i class="icon-refresh icon-white rotating_class"></i>
    </div>
