@@ -20,7 +20,7 @@ _PREVIEW_.start = function(renderertype, filetype, filepath) {
     jQuery('#BR_OVER').hide();
     jQuery('#PREVIEWMODAL').addClass('largePreview');
     jQuery('#PREVIEW').addClass('previewRenderer');
-  } else if (renderertype == 'html') {
+  } else if (renderertype == 'plugin') {
     // html preview
     jQuery('#PREVIEWSLIDER').show();
     jQuery('#AUTOREFRESH').hide();
@@ -78,15 +78,15 @@ _PREVIEW_.preview = function() {
                 jQuery("#textPreview")[0].scrollHeight);
           });
     }, 500);
-  } else if (_PREVIEW_.renderertype == 'html') {
+  } else if (_PREVIEW_.renderertype == 'plugin') {
     // text/log preview
     // hide loading overlay
     jQuery("#TL_OVER").hide();
     topiframe = '<iframe style="width: 100%; height: 700px; border: none" src="';
     endiframe = '"></iframe>';
+    window.console.log(_PREVIEW_.filepath);
     jQuery('#PREVIEW').html(
-        topiframe + 'api.php?action=get&what=file&parameters[]=default&parameters[]='
-            + _PREVIEW_.filepath + endiframe);
+        topiframe + _PREVIEW_.filepath + endiframe);
   } else {
     jQuery("#TL_OVER").html('Creating visualization...');
     // set XTK renderer

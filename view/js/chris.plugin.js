@@ -445,6 +445,7 @@ jQuery(document)
                   // #1- dropdown modal
                   // #2- create iFrame
                   // #3- pass args
+                  _PREVIEW_.start('plugin', 'plugin', _target);
                   window.console.log(_target);
                 }
               });

@@ -41,11 +41,9 @@ _FEED_.preview = function(file) {
   case 'JS':
   case 'INFO':
   case 'STATUS':
+  case 'HTML':
   case 'PARAM':
     _PREVIEW_.start('text', null, file);
-    break;
-  case 'HTML':
-    _PREVIEW_.start('html', null, file);
     break;
   }
 }

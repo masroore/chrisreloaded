@@ -137,7 +137,7 @@ _PACS_.ajaxSearch = function() {
 _PACS_.queryDayAll = function(mrn, date, nb_queries) {
   jQuery.ajax({
     type : "POST",
-    url : "pacs_query.php",
+    url : "plugins/pacs_pull/core/pacs_query.php",
     dataType : "json",
     data : {
       USER_AET : jQuery("#USER_AET").attr('value'),
@@ -713,7 +713,7 @@ _PACS_.ajaxPull = function() {
   // send to the launcher
   jQuery.ajax({
     type : "POST",
-    url : "../../controller/launcher-web.php",
+    url : "controller/launcher-web.php",
     dataType : "text",
     data : {
       FEED_PLUGIN : plugin,

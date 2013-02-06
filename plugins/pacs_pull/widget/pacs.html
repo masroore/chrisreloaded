@@ -7,7 +7,15 @@
 <meta name="description" content="">
 <meta name="author" content="">
 
-${CSS_CHRIS} ${CSS_PACS}
+<link rel="stylesheet"
+ href="http://chris/n/api.php?action=get&what=file&parameters[]=css&parameters[]=bootstrap.min.css" />
+<link rel="stylesheet"
+ href="http://chris/n/api.php?action=get&what=file&parameters[]=css&parameters[]=jquery-ui-1.9.1.custom.css" />
+<link rel="stylesheet" type="text/css"
+ src="api.php?action=get&what=file&parameters[]=cssP&parameters[]=pacs_pull/widget/css/jquery.dataTables.css" />
+<link rel="stylesheet" type="text/css"
+ src="api.php?action=get&what=file&parameters[]=cssP&parameters[]=pacs_pull/widget/css/pacs.css" />
+
 </head>
 
 <body style='background: url("../../view/gfx/background1.jpg")'>
@@ -57,7 +65,21 @@ ${CSS_CHRIS} ${CSS_PACS}
        </div>
       </div>
      </div>
-     ${RESULTS}
+     <div id="PACS-RESULTS" class='row-fluid' style="display: none">
+      <div class='span12'>
+       <div class='well'>
+        <h2>
+         Results:
+         <div class="btn-group" data-toggle="buttons-radio">
+          <button id="STUDY_VIEW" type="button" class="btn btn-primary">Study</button>
+          <button id="SERIES_VIEW" type="button"
+           class="btn btn-primary active">Series</button>
+         </div>
+        </h2>
+        <div id='SC-RESULTS' class='row-fluid'></div>
+       </div>
+      </div>
+     </div>
     </div>
     <div class="tab-pane" id="tab2">
 
@@ -89,7 +111,19 @@ ${CSS_CHRIS} ${CSS_PACS}
   </div>
  </div>
 
- ${JS_CHRIS} ${JS_PACS}
-
+ <script type="text/javascript"
+  src="api.php?action=get&what=file&parameters[]=js&parameters[]=jquery.min.js"></script>
+ <script type="text/javascript"
+  src="api.php?action=get&what=file&parameters[]=js&parameters[]=jquery-ui-1.8.23.custom.min.js"></script>
+ <script type="text/javascript"
+  src="api.php?action=get&what=file&parameters[]=js&parameters[]=bootstrap.min.js"></script>
+ <script type="text/javascript"
+  src="api.php?action=get&what=file&parameters[]=js&parameters[]=jquery.backstretch.min.js"></script>
+ <script type="text/javascript"
+  src="api.php?action=get&what=file&parameters[]=jsP&parameters[]=pacs_pull/widget/js/jquery.dataTables.min.js"></script>
+ <script type="text/javascript"
+  src="api.php?action=get&what=file&parameters[]=jsP&parameters[]=pacs_pull/widget/js/DT_bootstrap.js"></script>
+ <script type="text/javascript"
+  src="api.php?action=get&what=file&parameters[]=jsP&parameters[]=pacs_pull/widget/js/pacs.js"></script>
 </body>
 </html>

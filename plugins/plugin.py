@@ -58,7 +58,7 @@ class Plugin( argparse.ArgumentParser ):
     self.status = 0
     
     # the initial memory
-    self.memory = 512
+    self.memory = 2048
     
     # the initial memory
     self.target = ""

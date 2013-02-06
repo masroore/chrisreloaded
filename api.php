@@ -186,15 +186,19 @@ if (!SecurityC::login()) {
             // parameter 0: BASE directory
             switch ($parameters[0]){
               case "css":
-                $name = joinPaths(CHRIS_VIEW_FOLDER, 'css', $parameters[1]);
+                $name = joinPaths(CHRIS_VIEW_FOLDER,'css', $parameters[1]);
                 echo $name.PHP_EOL;
                 header("Content-type: text/css", true);
                 break;
               case "js":
                 $name = joinPaths(CHRIS_VIEW_FOLDER, 'js', $parameters[1]);
                 break;
+              case "plugin":
+                $name = joinPaths(CHRIS_PLUGINS_FOLDER, $parameters[1]);
+                break;
               case "cssP":
                 $name = joinPaths(CHRIS_PLUGINS_FOLDER, $parameters[1]);
+                echo $name;
                 header("Content-type: text/css", true);
                 break;
               case "jsP":
@@ -204,18 +208,23 @@ if (!SecurityC::login()) {
                 $name = joinPaths(CHRIS_USERS, $parameters[1]);
                 break;
             }
-            // enable cross origin requests
-            header("Access-Control-Allow-Origin: *");
-
-            // if the file does not exist, just die
-            if (!is_file($name)) {
-              die();
-            }
-
-            $fp = fopen($name, 'rb');
-
-            fpassthru($fp);
           }
+          else{
+            $name = joinPaths(CHRIS_USERS, $parameters);
+          }
+          
+          // enable cross origin requests
+          header("Access-Control-Allow-Origin: *");
+
+          // if the file does not exist, just die
+          if (!is_file($name)) {
+            die();
+          }
+
+          $fp = fopen($name, 'rb');
+
+          fpassthru($fp);
+
           die();
         }
         else if ($what == 'json') {
@@ -232,11 +241,23 @@ if (!SecurityC::login()) {
         }
 
         break;
+
       case "download":
         if($what == 'file') {
 
-          // here we don't create JSON but just pass thru the file content
-          $name = joinPaths(CHRIS_USERS, $parameters);
+          if(count($parameters) == 2){
+            switch ($parameters[0]){
+              case "plugin":
+                $name = joinPaths(CHRIS_PLUGINS_FOLDER, $parameters[1]);
+                break;
+              default:
+                $name = joinPaths(CHRIS_USERS, $parameters[1]);
+                break;
+            }
+          }else{
+            // here we don't create JSON but just pass thru the file content
+            $name = joinPaths(CHRIS_USERS, $parameters);
+          }
 
           // enable cross origin requests
           header("Access-Control-Allow-Origin: *");
@@ -257,13 +278,17 @@ if (!SecurityC::login()) {
           die();
 
         }
+        break;
       case "help":
         $result['result'] = 'Perform actions on ChRIS.. Examples: COUNT: ?action=count&what=feed --- GET: ?action=get&what=feed&id=3 --- All parameters can be GET or POST.';
         break;
       case "ping":
+        $result['result'] = 'Up and running.';
+        break;
       default:
         // this is a ping
         $result['result'] = 'Up and running.';
+        break;
     }
 
   }

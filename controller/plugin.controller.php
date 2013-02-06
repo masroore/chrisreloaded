@@ -147,7 +147,8 @@ class PluginC implements PluginControllerInterface {
     $xp->importStylesheet($xsl);
 
     // ..transform the XML to HTML
-    $html = $xp->transformToXML(new SimpleXMLElement($p_xml));
+     $xxx = new SimpleXMLElement($p_xml);
+    $html = $xp->transformToXML($xxx);
 
     // replace plugin name variable
     $html = str_replace('${PLUGIN_NAME}', $plugin, $html);
