@@ -19,6 +19,10 @@ _PREVIEW_.start = function(renderertype, filetype, filepath) {
     // jQuery('#PREVIEWMODAL').addClass('largePreview');
   } else if (renderertype == 'plugin') {
     _PREVIEW_.target = '#MODAL_PLUGIN';
+    $(_PREVIEW_.target).css('height',
+        $(document).height() -81);
+    $(_PREVIEW_.target).find('.modal-body').css('height',
+        $(document).height() -81);
   } else {
     _PREVIEW_.target = '#MODAL_WEBGL';
     // XTK preview
@@ -31,7 +35,7 @@ _PREVIEW_.start = function(renderertype, filetype, filepath) {
   // general modal settings
   // always center the modal
   $(_PREVIEW_.target).css('margin-left',
-      jQuery(_PREVIEW_.target).outerWidth() / 2 * -1);
+      $(_PREVIEW_.target).outerWidth() / 2 * -1);
   // Top Left overlay
   $("#TL_OVER").html(
       'Retrieving data <i class="icon-refresh icon-white rotating_class">');
@@ -77,7 +81,10 @@ _PREVIEW_.preview = function() {
     // plugin preview
     // hide loading overlay
     $(_PREVIEW_.target).find("#TL_OVER").hide();
-    topiframe = '<iframe style="width: 100%; height: 700px; border: none" src="';
+    $(_PREVIEW_.target).find('.modal-body').css('height',
+        $(document).height() -1);
+    var height = $(document).height() -81;
+    topiframe = '<iframe style="width: 100%; height: '+height.toString()+'px; border: none" src="';
     endiframe = '"></iframe>';
     $(_PREVIEW_.target).find('#PLUGIN_PREVIEW').html(
         topiframe + _PREVIEW_.filepath + endiframe);
