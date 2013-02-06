@@ -2,7 +2,7 @@
 #textPreview {
   background-color: black;
   color: white;
-  overflow: scroll;
+  overflow-y: scroll;
   height: 100%;
   margin: 0px;
   padding: 2px;
