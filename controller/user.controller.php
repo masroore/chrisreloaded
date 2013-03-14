@@ -33,6 +33,8 @@ require_once (dirname(dirname(__FILE__)).'/config.inc.php');
 
 require_once (joinPaths(CHRIS_CONTROLLER_FOLDER, 'mapper.class.php'));
 
+require_once ('Net/SSH2.php');
+
 // interface
 interface UserControllerInterface
 {
@@ -100,14 +102,18 @@ class UserC implements UserControllerInterface {
 
     if (!isset($username) || !isset($password)) return -1;
 
-    $userMapper = new Mapper('User');
-    $userMapper->filter('username=(?)', $username);
-    //$userMapper->filter('password=(?)', UserC::hashPassword($password));
-    $userResults = $userMapper->get();
+    $ssh = new Net_SSH2(CLUSTER_HOST);
+    if ($ssh->login($username, $password)) {
 
-    if(isset($userResults['User'][0])) {
+      // the user credentials are valid!
 
-      if (crypt($password, $userResults['User'][0]->password) == $userResults['User'][0]->password) {
+      // make sure this user is also allowed to access chris by checking the user table and grabbing the user id
+
+      $userMapper = new Mapper('User');
+      $userMapper->filter('username=(?)', $username);
+      $userResults = $userMapper->get();
+
+      if(isset($userResults['User'][0])) {
 
         // valid user
         return $userResults['User'][0]->id;
@@ -116,6 +122,7 @@ class UserC implements UserControllerInterface {
 
     }
 
+    // invalid credentials
     return -1;
 
   }

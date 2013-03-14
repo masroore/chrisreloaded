@@ -40,6 +40,9 @@ require_once (joinPaths(CHRIS_CONTROLLER_FOLDER, 'data.controller.php'));
 require_once (joinPaths(CHRIS_CONTROLLER_FOLDER, 'feed.controller.php'));
 require_once (joinPaths(CHRIS_CONTROLLER_FOLDER, 'user.controller.php'));
 
+// ssh - to be removed when user::controller works
+require_once ('Net/SSH2.php');
+
 // return values
 $start_time = new DateTime();
 $result = array(
@@ -115,6 +118,13 @@ if (!SecurityC::login()) {
 
   } else {
 
+    // check if maintenance is active
+    if (CHRIS_MAINTENANCE) {
+
+      $action = "maintenance";
+
+    }
+
     // valid minimal parameters
 
     // check actions
@@ -138,39 +148,72 @@ if (!SecurityC::login()) {
           $result['result'] = FeedC::favorite($id);
         }
         else if($what == 'feed_share'){
-          $result['result'] = FeedC::share($id, $result['userid'], $result['username'], $parameters[0]);
+          // login since we will modify things on the file system
+          $ssh_connection = new Net_SSH2(CLUSTER_HOST);
+          if (!$ssh_connection->login($_SESSION['username'], $_SESSION['password'])) {
+            die('Login Failed');
+          }
+          $result['result'] = FeedC::share($id, $result['userid'], $result['username'], $parameters[0], $ssh_connection);
         }
         else if($what == 'feed_archive'){
           $result['result'] = FeedC::archive($id);
         }
+        else if($what == 'feed_cancel'){
+          $ssh_connection = new Net_SSH2(CLUSTER_HOST);
+          if (!$ssh_connection->login($_SESSION['username'], $_SESSION['password'])) {
+            die('Login Failed');
+          }
+
+          $result['result'] = FeedC::cancel($id, $ssh_connection);
+
+        }
         else if($what == 'file') {
+          $ssh_connection = new Net_SSH2(CLUSTER_HOST);
+          if (!$ssh_connection->login($_SESSION['username'], $_SESSION['password'])) {
+            die('Login Failed');
+          }
 
           // here we store content to a file
           $name = joinPaths(CHRIS_USERS, $parameters[0]);
 
-          $fp = fopen($name, 'w');
+          $ssh_connection->exec("echo ".$parameters[1]." >> ".$name);
 
-          fwrite($fp, $parameters[1]);
           $result['result'] = $name.' written.';
 
         } else if($what == 'feed_merge') {
-
+          // login since we will modify things on the file system
+          $ssh_connection = new Net_SSH2(CLUSTER_HOST);
+          if (!$ssh_connection->login($_SESSION['username'], $_SESSION['password'])) {
+            die('Login Failed');
+          }
           // grab the master id
           $master_feed_id = $id;
           // .. and the slave id
           $slave_feed_id = $parameters;
 
           // merge the feeds
-          FeedC::mergeFeeds($master_feed_id, $slave_feed_id);
+          $merged = FeedC::mergeFeeds($master_feed_id, $slave_feed_id, $ssh_connection);
 
-          // and archive the slave
-          FeedC::archive($slave_feed_id);
+          if ($merged) {
+            // and archive the slave
+            FeedC::archive($slave_feed_id);
 
-          $result['result'] = 'done';
+            $result['result'] = 'done';
+
+          } else {
+
+            // feeds not merged since there was a collision
+            $result['result'] = 'error';
+
+          }
 
         } else if($what == 'feed_name') {
-
-          $result['result'] = FeedC::updateName($id, $parameters);
+          // login since we will modify things on the file system
+          $ssh_connection = new Net_SSH2(CLUSTER_HOST);
+          if (!$ssh_connection->login($_SESSION['username'], $_SESSION['password'])) {
+            die('Login Failed');
+          }
+          $result['result'] = FeedC::updateName($id, $parameters, $ssh_connection);
 
         }
         break;
@@ -282,6 +325,12 @@ if (!SecurityC::login()) {
       case "help":
         $result['result'] = 'Perform actions on ChRIS.. Examples: COUNT: ?action=count&what=feed --- GET: ?action=get&what=feed&id=3 --- All parameters can be GET or POST.';
         break;
+      case "maintenance":
+
+        // this is maintenance mode
+        $result['result'] = 'maintenance';
+        break;
+
       case "ping":
         $result['result'] = 'Up and running.';
         break;

@@ -375,7 +375,6 @@ jQuery(document)
                   if (_definedMemory) {
                     _memory = _definedMemory;
                   }
-                  // 
                   var _feed_name = (new Date()).toISOString();
                   // send to the launcher
                   jQuery.ajax({

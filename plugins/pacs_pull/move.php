@@ -44,15 +44,49 @@ require_once (joinPaths(CHRIS_MODEL_FOLDER, 'data_study.model.php'));
 require_once (joinPaths(CHRIS_MODEL_FOLDER, 'patient.model.php'));
 // include chris user_data models
 require_once (joinPaths(CHRIS_MODEL_FOLDER, 'data_patient.model.php'));
+// include chris data models
+require_once (joinPaths(CHRIS_MODEL_FOLDER, 'user.model.php'));
 
 // include pacs helper
 require_once (joinPaths(CHRIS_PLUGINS_FOLDER, 'pacs_pull/pacs.class.php'));
 
+
+// send email to admin
+// should be more generic to email user after plugins has finished too
+
+function sendEmail(&$patientInfo, &$dataLocation, &$emailTo){
+  // start email:
+  $message = 'Dear ChRIS user,'.PHP_EOL;
+  $message .= 'You have a new incoming series available at:'.PHP_EOL.PHP_EOL;
+  $message .= 'Output directory: '.$dataLocation.PHP_EOL.PHP_EOL;
+
+  // patient information
+  $message .= '===== Patient ====='.PHP_EOL;
+  $message .= 'ID: '.$patientInfo['PatientID'][0].PHP_EOL;
+  $message .= 'Name: '.$patientInfo['PatientName'][0].PHP_EOL;
+  $message .= 'Sex: '.$patientInfo['PatientSex'][0].PHP_EOL;
+  $message .= 'BirthDate: '.$patientInfo['PatientBirthDate'][0].PHP_EOL.PHP_EOL;
+
+  // patient information
+  $message .= '===== Data ====='.PHP_EOL;
+  $message .= 'Study Date: '.$patientInfo['StudyDate'][0].PHP_EOL;
+  $message .= 'Study Description: '.$patientInfo['StudyDescription'][0].PHP_EOL;
+  $message .= 'Series Description: '.$patientInfo['SeriesDescription'][0].PHP_EOL;
+  $message .= 'Protocol: '.$patientInfo['ProtocolName'][0].PHP_EOL;
+  $message .= 'Station: '.$patientInfo['StationName'][0].PHP_EOL.PHP_EOL.PHP_EOL;
+
+  $message .= "Thank you for using ChRIS.";
+
+  email(CHRIS_DICOM_EMAIL_FROM, $emailTo, "New dicom series has been received", $message);
+}
+
+// main function
 $shortopts = "d:";
 
 $options = getopt($shortopts);
 
 $study_directory = $options['d'];
+$emailTo = CHRIS_DICOM_EMAIL_TO;
 
 // open log file
 $logFile = '';
@@ -139,7 +173,7 @@ if ($handle = opendir($study_directory)) {
                 $logFile .= 'Patient already mapped to data...'.PHP_EOL;
                 $logFile .= 'patient data id: '.$dataPatientResult['Data_Patient'][0]->id.PHP_EOL;
               }
-              
+
               // MAP DATA TO STUDY
               $dataStudyMapper = new Mapper('Data_Study');
               $dataStudyMapper->filter('data_id = (?)',$data_chris_id);
@@ -151,7 +185,7 @@ if ($handle = opendir($study_directory)) {
                 $dataStudyObject->data_id = $data_chris_id;
                 $dataStudyObject->study_id = $study_chris_id;
                 $mapping_data_study_id = Mapper::add($dataStudyObject);
-                
+
                 $logFile .= 'data study id: '.$mapping_data_study_id.PHP_EOL;
               }
               else{
@@ -195,12 +229,25 @@ if ($handle = opendir($study_directory)) {
               if(!is_dir($datadirname)){
                 mkdir($datadirname);
                 $logFile .= 'MKDIR: '.$datadirname.PHP_EOL;
-                // create the 0.info file, which contains more information about the data
+                
                 $myFile = $datadirname.'/0.info';
                 $fh = fopen($myFile, 'a');
                 
+                // Add Patient information
+                fwrite($fh, '---------------------------'.PHP_EOL.'    GENERAL INFORMATION    '.PHP_EOL.'---------------------------'.PHP_EOL);
                 foreach($process_file as $key => $value)
                   fwrite($fh, $key.' : '.$value[0].PHP_EOL);
+                
+                // Add Image information
+                fwrite($fh, PHP_EOL.'---------------------------'.PHP_EOL.'    IMAGE INFORMATION    '.PHP_EOL.'---------------------------'.PHP_EOL);
+                // create the 0.info file, which contains more information about the data
+                // build command
+                $command = '/bin/bash -c  "';
+                $command .= 'source /chb/arch/scripts/chb-fs stable  2>&1 ; mri_info '.$study_directory.'/'.$entry.'/'.$sub_entry.' ;';
+                $command .= '"';
+                $command_output = shell_exec($command);
+                fwrite($fh, $command_output);
+                
                 
                 fclose($fh);
               }
@@ -215,7 +262,8 @@ if ($handle = opendir($study_directory)) {
               // it appears to be 0 and the real instance number
               //$intanceNumber = max($process_file['InstanceNumber']);
               // different naming based on
-              $filename = $datadirname .'/'.$process_file['InstanceNumber'][0].'-'. $process_file['SOPInstanceUID'][0] . '.dcm';
+              $instance_nb = sprintf('%04d', intval($process_file['InstanceNumber'][0]));
+              $filename = $datadirname .'/'.$instance_nb.'-'. $process_file['SOPInstanceUID'][0] . '.dcm';
               if(!is_file($filename)){
                 copy($study_directory.'/'.$entry.'/'.$sub_entry, $filename);
                 $logFile .= 'COPY: '.$filename.PHP_EOL;
@@ -258,6 +306,36 @@ if ($handle = opendir($study_directory)) {
     }
   }
   closedir($handle);
+
+  // parse files in directory to know who we should email
+  if ($handle2 = opendir($study_directory)) {
+    /* This is the correct way to loop over the directory. */
+    // make an array from scanners name/conact
+    $chris_scanners = unserialize(CHRIS_SCANNERS);
+    while (false !== ($entry2 = readdir($handle2))) {
+      if($entry2 != "." && $entry2 != ".."){
+        // if known scanner
+        if(array_key_exists($entry2, $chris_scanners)){
+          $emailTo .= ','.$chris_scanners[$entry2];
+        }
+        else{
+          // if user exists, add him to the mailing list
+          $userMapper = new Mapper('User');
+          $userMapper->filter('username = (?)',$entry2);
+          $userResult = $userMapper->get();
+
+          if(count($userResult['User']) != 0)
+          {
+            $emailTo .= ','.$userResult['User'][0]->email;
+          }
+        }
+        // delete the temp file
+        unlink($study_directory.'/'.$entry2);
+      }
+    }
+  }
+  closedir($handle2);
+
   // delete directory
   $logFile .= 'delete: '.$study_directory.PHP_EOL;
   rmdir($study_directory);
@@ -284,6 +362,9 @@ foreach($received as $key => $value){
   }
 }
 
+sendEmail($process_file, $datadirname, $emailTo);
+
 echo $logFile;
+
 return;
 ?>

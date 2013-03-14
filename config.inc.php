@@ -32,6 +32,15 @@ if(!defined('__CHRIS_ENTRY_POINT__')) die('Invalid access.');
 // include the utilities
 require_once(dirname(__FILE__).'/controller/_util.inc.php');
 
+// maintenance mode
+define('CHRIS_MAINTENANCE', false);
+
+// admin email
+define('CHRIS_ADMIN_EMAIL', 'chris@babymri.org');
+define('CHRIS_PLUGIN_EMAIL_FROM', 'plugin@chris.org');
+define('CHRIS_DICOM_EMAIL_FROM', 'dicom@chris.org');
+define('CHRIS_DICOM_EMAIL_TO', 'nicolas.rannou@childrens.harvard.edu,rudolph.pienaar@childrens.harvard.edu');
+
 // MYSQL configuration
 define('SQL_HOST', 'chris');
 define('SQL_USERNAME', 'chris');
@@ -44,6 +53,7 @@ define('CHRIS_MODEL_FOLDER', joinPaths(CHRIS_WWWROOT,'model'));
 define('CHRIS_VIEW_FOLDER', joinPaths(CHRIS_WWWROOT,'view'));
 define('CHRIS_TEMPLATE_FOLDER', joinPaths(CHRIS_VIEW_FOLDER,'template'));
 define('CHRIS_CONTROLLER_FOLDER', joinPaths(CHRIS_WWWROOT,'controller'));
+define('CHRIS_LIB_FOLDER', joinPaths(CHRIS_WWWROOT,'lib'));
 define('CHRIS_PLUGINS_FOLDER', joinPaths(CHRIS_WWWROOT,'plugins'));
 define('CHRIS_PLUGINS_FOLDER_RELATIVE', 'plugins');
 
@@ -53,9 +63,19 @@ define('CHRIS_TMP', '/chb/users/chris/dev/tmp/');
 define('CHRIS_USERS', '/chb/users/chris/dev/users/');
 define('CHRIS_LOG', '/chb/users/chris/dev/log/');
 
+// known scanners and contact information
+define('CHRIS_SCANNERS', serialize(array(
+    "MRC25948" => "borjan.gagoski@childrens.harvard.edu",
+    "MRWAL2" => "borjan.gagoski@childrens.harvard.edu",
+    "MR1" => "borjan.gagoski@childrens.harvard.edu")));
+
 // cluster
 define('CLUSTER_HOST', 'rc-goldfinger');
 define('CLUSTER_USERNAME', 'chris');
+// we replace {MEMORY} with a memory requirement
+// and {COMMAND} with the command to schedule
+define('CLUSTER_RUN', 'nohup /bin/mosbatch -q -b -J{FEED_ID} -m{MEMORY} {COMMAND}');
+define('CLUSTER_KILL', 'moskillall -9 -J{FEED_ID}');
 
 // TESTING
 define('SIMPLETEST_CHRIS', joinPaths(CHRIS_WWWROOT,'testing/simpletest_chris.php'));
@@ -70,6 +90,9 @@ if(defined('CHRIS_CONFIG_DEBUG')) {
   $all_constants = get_defined_constants(true);
   print_r($all_constants['user']);
 }
+
+// setup phpseclib for SSH access
+set_include_path(get_include_path() . PATH_SEPARATOR . joinPaths(CHRIS_LIB_FOLDER, 'phpseclib', 'phpseclib'));
 
 
 // FLAG showing that the config was parsed

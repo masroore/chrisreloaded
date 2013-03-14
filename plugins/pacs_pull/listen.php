@@ -32,8 +32,15 @@ if(!defined('__CHRIS_ENTRY_POINT__')) define('__CHRIS_ENTRY_POINT__', 666);
 if(!defined('CHRIS_CONFIG_PARSED'))
   require_once(dirname(dirname(dirname ( __FILE__ ))).'/config.inc.php');
 
-// open log file
-$logFile = joinPaths(CHRIS_LOG, 'pacs_pull_listen.log');
+// create log file
+$logFile = joinPaths(CHRIS_LOG,date('YmdHis').'-pacs_pull_listen.log');
+while(!file_exists($logFile)){
+  if(touch($logFile)){
+    break;
+  }
+  $logFile = joinPaths(CHRIS_LOG,date('YmdHis').'-pacs_pull_listen.log');
+}
+
 $fullReport = '';
 
 // CREATE UNIQUE DIRECTORY
@@ -58,7 +65,7 @@ fclose($fh);
 
 // we now have a unique directory to be processed
 // create tmp file #a.aet to know who is the owner of the file
-$listen_command = '/usr/bin/storescp -id -od "' . $tmpdirname . '" -pm -ss RX';
+$listen_command = '/usr/bin/storescp -id -od "' . $tmpdirname . '" -xcr "touch '.$tmpdirname.'/#c;touch '.$tmpdirname.'/#a" -pm -ss RX';
 //write log
 $startReportPretty = "=========================================". PHP_EOL;
 $report = date('Y-m-d h:i:s'). ' ---> Start receiving data...'. PHP_EOL;

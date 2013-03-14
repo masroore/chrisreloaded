@@ -55,9 +55,11 @@ interface FeedControllerInterface
   // return the number of running jobs for a user
   static public function getRunningCount($userid);
   // merge two feeds
-  static public function mergeFeeds($master_id, $slave_id);
+  static public function mergeFeeds($master_id, $slave_id, &$ssh_connection);
   // update feed name
-  static public function updateName($id, $name);
+  static public function updateName($id, $name, &$ssh_connection);
+  // cancel the job
+  static public function cancel($id, &$ssh_connection);
 }
 
 /**
@@ -93,10 +95,10 @@ class FeedC implements FeedControllerInterface {
         $feedMapper->filter('favorite = (?)', '1');
         break;
       case "running":
-        $feedMapper->filter('status != (?)', '100');
+        $feedMapper->filter('status < (?)', '100');
         break;
       case "finished":
-        $feedMapper->filter('status = (?)', '100');
+        $feedMapper->filter('status >= (?)', '100');
         break;
       default:
         break;
@@ -189,7 +191,7 @@ class FeedC implements FeedControllerInterface {
       $feedMapper->filter('user_id = (?)', $user_id);
     }
     $feedMapper->filter('archive = (?)', '0');
-    $feedMapper->filter('status != (?)','100');
+    $feedMapper->filter('status < (?)','100');
     $feedMapper->order('time');
     $feedResult = $feedMapper->get();
 
@@ -225,6 +227,7 @@ class FeedC implements FeedControllerInterface {
     $feedMapper->filter('archive = (?)', '0');
     $feedMapper->filter('favorite = (?)', '0');
     $feedMapper->filter('time < (?)',$feed_old);
+    $feedMapper->filter('status >= (?)', '100');
     $feedMapper->order('time');
     $feedResult = $feedMapper->get();
 
@@ -282,7 +285,7 @@ class FeedC implements FeedControllerInterface {
     return $feed_update;
   }
 
-  static public function share($feed_id, $ownerid, $ownername, $targetname){
+  static public function share($feed_id, $ownerid, $ownername, $targetname, &$ssh_connection){
     // get target user id
     $userMapper = new Mapper('User');
     $userMapper->filter('username = (?)', $targetname);
@@ -312,6 +315,10 @@ class FeedC implements FeedControllerInterface {
         $metaMapper->filter('name = (?)', 'parameters', 2);
         $metaMapper->filter('target_id = (?)', $feed_id, 2);
         $metaMapper->filter('target_type = (?)', 'feed', 2);
+        // second filters
+        $metaMapper->filter('name = (?)', 'pid', 3);
+        $metaMapper->filter('target_id = (?)', $feed_id, 3);
+        $metaMapper->filter('target_type = (?)', 'feed', 3);
         // get results
         $metaResult = $metaMapper->get();
         // for earch result, create same meta with different target id
@@ -336,13 +343,24 @@ class FeedC implements FeedControllerInterface {
 
         $destinationDirectory = CHRIS_USERS.$targetname.'/'.$feedResult['Feed'][0]->plugin;
         if(!is_dir($destinationDirectory)){
-          mkdir($destinationDirectory);
+          // 777? 775
+          $old = umask();
+          umask(0000);
+          mkdir($destinationDirectory, 0775, true);
+          umask($old);
         }
 
         $destinationDirectory .= '/'.$feedResult['Feed'][0]->name.'-'.$new_id;
 
         // just a link?
         symlink($targetDirectory, $destinationDirectory);
+
+        // we need to change the permission of the target directory to 777 (as the owner)
+        // so that the other user can write to this folder
+        // but only if the targetDirectory is a directory and not a link (a link means it was re-shared)
+        if (is_dir($targetDirectory)) {
+          $ssh_connection->exec('chmod -R 777 '.$targetDirectory);
+        }
 
         //if(!is_dir($destinationDirectory)){
         //  recurse_copy($targetDirectory, $destinationDirectory);
@@ -517,9 +535,9 @@ class FeedC implements FeedControllerInterface {
 
     if ($userid == 0) {
       // special case for the admin
-      $results = DB::getInstance()->execute('SELECT COUNT(*) FROM feed WHERE status=(?)',Array('0'));
+      $results = DB::getInstance()->execute('SELECT COUNT(*) FROM feed WHERE status < (?)',Array('100'));
     } else {
-      $results = DB::getInstance()->execute('SELECT COUNT(*) FROM feed WHERE user_id=(?) AND status=(?)',Array($userid,'0'));
+      $results = DB::getInstance()->execute('SELECT COUNT(*) FROM feed WHERE user_id=(?) AND status < (?)',Array($userid,'100'));
     }
 
     return $results[0][0][1];
@@ -533,7 +551,7 @@ class FeedC implements FeedControllerInterface {
    * @param int $master_id The master feed id (target for merge).
    * @param int $slave_id The slave feed id.
    */
-  static public function mergeFeeds($master_id, $slave_id) {
+  static public function mergeFeeds($master_id, $slave_id, &$ssh_connection) {
 
     $username = $_SESSION['username'];
 
@@ -549,9 +567,6 @@ class FeedC implements FeedControllerInterface {
     $slavefeedResult = $slavefeedMapper->get();
     $slavefeedDirectory = joinPaths(CHRIS_USERS.$username, $slavefeedResult['Feed'][0]->plugin, $slavefeedResult['Feed'][0]->name.'-'.$slavefeedResult['Feed'][0]->id);
 
-    // folders to link
-    $foldersToLink = Array();
-    $highestSubfolderIndex = 0;
 
     // find the slave feed folders
     $slavefeedSubfolders = scandir($slavefeedDirectory);
@@ -571,70 +586,101 @@ class FeedC implements FeedControllerInterface {
       // remove this entry - we don't want to touch it
       unset($slavefeedSubfolders[$index]);
     }
-    // if subfolder 0 does not exist, use the current contents without notes.html and index.html as folder 0
-    $folder0 = array_search('0', $slavefeedSubfolders);
-    if (!$folder0) {
-      // only one job exists
-      $foldersToLink[] = $slavefeedDirectory;
 
-    } else {
-      // multiple jobs exist
-      // and $slavefeedSubfolders contains the list
-      // just prepend the slavefeedDirectory
-      foreach($slavefeedSubfolders as $key => $value) {
-        $foldersToLink[] = $slavefeedDirectory.'/'.$value;
-      }
-    }
+    // try "smart" renaming, if not working, user did something and we do
+    // solve collision in a dummy way
 
-    // check for the highest subfolder index in the master feed folder
+    // get number of directories in master directory
     $masterfeedSubfolders = scandir($masterfeedDirectory);
-    natcasesort($masterfeedSubfolders);
+    $startindex = count($masterfeedSubfolders) - 2;
 
-    // always remove . and ..
-    unset($masterfeedSubfolders[0]);
-    unset($masterfeedSubfolders[1]);
-    // find notes.html
-    $notes = array_search('notes.html', $masterfeedSubfolders);
-    if ($notes) {
-      // remove this entry - we don't want to touch it
-      unset($masterfeedSubfolders[$notes]);
-    }
-    // find index.html
-    $index = array_search('index.html', $masterfeedSubfolders);
-    if ($index) {
-      // remove this entry - we don't want to touch it
-      unset($masterfeedSubfolders[$index]);
-    }
-    // if subfolder 0 does not exist, create folder 0 right now
-    $folder0 = array_search('0', $masterfeedSubfolders);
-    if (!$folder0) {
+    // link all job directories of the slave in the master folder
+    foreach($slavefeedSubfolders as $key => $value) {
+      // split name
+      $index = explode('_', $value, 2);
+      if(count($index) != 2 || !is_numeric($index[0])){
+        $index = array('0', $value);
+      }
+      $slaveindex = intval($index[0]);
+      $dest = strval($startindex+$slaveindex).'_'.$index[1];
 
-      // note: this only ensures backwards compatibility
-      // all new feeds after 01/28/2013 should contain folder 0
-
-      // create folder 0
-      mkdir($masterfeedDirectory.'/0');
-
-      // move all content from this feed into the new directory 0
-      foreach($masterfeedSubfolders as $key => $value) {
-        rename(joinPaths($masterfeedDirectory, $value), joinPaths($masterfeedDirectory.'/0', $value));
+      while(file_exists($masterfeedDirectory.'/'.$dest)){
+        $slaveindex++;
+        $dest = strval($startindex+$slaveindex).'_'.$index[1];
       }
 
-    } else {
-      // multiple jobs exist
+      // if doesnt exist
+      if (!file_exists($masterfeedDirectory.'/'.$dest)) {
+        $ssh_connection->exec('ln -s '.$slavefeedDirectory.'/'.$value.' '.$masterfeedDirectory.'/'.$dest);
+      }
+      else{
+        // uh-oh! collision!
+        return false;
+      }
+    }
+    return true;
+  }
 
-      // adjust the highest subfolder index
-      $highestSubfolderIndex = end($masterfeedSubfolders);
+  /**
+   * Cancel a running feed.
+   *
+   * Returns TRUE if feed is not running anymore.
+   *
+   * @param int $id The feed id.
+   */
+  static public function cancel($id, &$ssh_connection) {
+
+    // check if feed status is running
+    $feedResult = Mapper::getStatic('Feed', $id);
+
+    if($feedResult['Feed'][0]->status != 100) {
+
+      // job is running or queued
+      $cluster_kill_command = str_replace("{FEED_ID}", $feedResult['Feed'][0]->id, CLUSTER_KILL);
+      $ssh_connection->exec($cluster_kill_command);
+
+      // set status to canceled
+      $status = 101;
+
+      $startTime = $feedResult['Feed'][0]->time;
+      $endTime = microtime(true);
+      $duration = $endTime - $startTime;
+
+      $feedResult['Feed'][0]->time = $endTime;
+      $feedResult['Feed'][0]->duration = $duration;
+      $feedResult['Feed'][0]->status = $status;
+
+      // push to the db
+      Mapper::update($feedResult['Feed'][0], $id);
+
+      // find all shared versions of this feed
+      $metaMapper = new Mapper('Meta');
+      $metaMapper->filter('value = (?)', $id);
+      $metaMapper->filter('name = (?)', 'root_id');
+      $metaMapper->filter('target_id != (?)', $id);
+      $metaResult = $metaMapper->get();
+
+      // adjust all statuses
+      if(count($metaResult['Meta']) >= 1){
+        foreach($metaResult['Meta'] as $key => $value) {
+
+          $feed = Mapper::getStatic('Feed', $value->target_id);
+
+          $feed['Feed'][0]->time = $endTime;
+          $feed['Feed'][0]->duration = $duration;
+          $feed['Feed'][0]->status = $status;
+
+          // push to the db
+          Mapper::update($feed['Feed'][0], $value->target_id);
+
+        }
+
+      }
 
     }
 
-    // now start linking the foldersToLink into the master feed directory
-    foreach($foldersToLink as $key => $value) {
-      // increase the highestSubfolderIndex
-      $highestSubfolderIndex++;
-      symlink($value, joinPaths($masterfeedDirectory, $highestSubfolderIndex));
+    return true;
 
-    }
   }
 
   /**
@@ -643,7 +689,7 @@ class FeedC implements FeedControllerInterface {
    * @param int $id The feed id.
    * @param string $name The feed name to set.
    */
-  static public function updateName($id, $name) {
+  static public function updateName($id, $name, &$ssh_connection) {
 
     $username = $_SESSION['username'];
 
@@ -658,8 +704,10 @@ class FeedC implements FeedControllerInterface {
     // rename feed folder
     $old_path = joinPaths(CHRIS_USERS.$username, $feedResult['Feed'][0]->plugin, $old_name.'-'.$feedResult['Feed'][0]->id);
     $new_path = joinPaths(CHRIS_USERS.$username, $feedResult['Feed'][0]->plugin, $safe_name.'-'.$feedResult['Feed'][0]->id);
-    rename($old_path, $new_path);
 
+    if(!is_link($new_path) and !file_exists($new_path)){
+      $ssh_connection->exec('ln -s '.$old_path.' '.$new_path);
+    }
 
     // find all shared versions of this feed
     $metaMapper = new Mapper('Meta');
@@ -684,8 +732,6 @@ class FeedC implements FeedControllerInterface {
         unlink($link_path);
         // create new link
         symlink($new_path, $link_path);
-
-
       }
     }
 
